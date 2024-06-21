@@ -1,0 +1,6 @@
+№;direction; protocol; src_port; src_port_range; dst_port; dst_port_range; src_ip; src_ip_range; dst_ip; dst_ip_range; result;
+0;1;TCP;80;None;80;None;192.168.0.105;None;None;None;allow
+1;1;ICMP;None;None;None;None;192.168.0.108;None;None;None;reject
+2;1;None;None;None;None;4000-53195;None;None;None;None;reject
+3;1;None;None;None;5663;None;None;None;None;None;reject
+4;None;None;None;None;None;None;None;None;None;None;allow
