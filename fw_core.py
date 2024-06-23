@@ -8,7 +8,7 @@ class FirewallCore:
     # проверка на соответствие одного параметра из правила
     def checkRule(self, param, packet, rule_value):
         if param == 'direction':
-            check_value = str(packet.direction)
+            check_value = str(int(packet.direction))  # напрямую в строку лучше не переводить
         elif param == 'protocol':
             check_value = str(FWutils.protocols[packet.protocol[0]])
         elif param == 'src_port':
@@ -19,6 +19,8 @@ class FirewallCore:
             check_value = str(packet.src_addr)
         elif param == 'dst_ip':
             check_value = str(packet.dst_addr)
+        else:
+            raise ValueError(f'Invalid ip packet parameter: {param}')
 
         if rule_value == 'None':
             self.__is_fit_F = self.__is_fit_F
@@ -28,21 +30,28 @@ class FirewallCore:
             self.__is_fit_F = False
 
     # проверка на соответствие порта диапазону портов
+    # Работает тупо т.к. криво учитывает отсутствие порта
     def checkRangedRule_port(self, param, packet, rule_values):
         if param == 'src_port_range':
             check_value = str(packet.src_port)
         elif param == 'dst_port_range':
             check_value = str(packet.dst_port)
+        else:
+            raise ValueError(f'Invalid ip packet parameter: {param}')
 
         rule_values = rule_values.split('-')
+
+        # На случай если порта нет
         if check_value == 'None':
-            self.__is_fit_F = False
-        elif (rule_values[0] == 'None'):
+            check_value = -1
+
+        if rule_values[0] == 'None':
             self.__is_fit_F = self.__is_fit_F
         elif (int(rule_values[0]) <= int(check_value)) and (int(check_value) <= int(rule_values[1])):
             self.__is_fit_F = self.__is_fit_F
         else:
             self.__is_fit_F = False
+
 
     # проверка на соответствие адреса диапазону адресов
     def checkRangedRule_addr(self, param, packet, rule_values):
@@ -50,6 +59,8 @@ class FirewallCore:
             check_value = str(packet.src_addr)
         elif param == 'dst_ip_range':
             check_value = str(packet.dst_addr)
+        else:
+            raise ValueError(f'Invalid ip packet parameter: {param}')
 
         rule_values = rule_values.split('-')
         if rule_values[0] == 'None':
@@ -71,6 +82,7 @@ class FirewallCore:
     def __init__(self):
         # создаём хэндлер pydivert
         self.__w = pydivert.WinDivert()
+        self.__is_ipv6 = True
 
 
     def start(self):
@@ -90,7 +102,10 @@ class FirewallCore:
 
             # Не работает с ipv6
             if packet.ipv6:
-                self.__w.send(packet)
+                if self.__is_ipv6:
+                    self.__w.send(packet)
+                else:
+                    pass
                 continue
             # цикл работающий с одним правилом
             for self.single_rule in self.rules:
@@ -123,7 +138,7 @@ class FirewallCore:
                     if self.single_rule[11] == 'allow':
                         self.__w.send(packet)
                     elif self.single_rule[11] == 'reject':
-                        print(f'Rejected packet from ip {packet.src_addr}, on port {packet.dst_port}, protocol {FWutils.protocols[packet.protocol[0]]} using rule {self.single_rule[0]}')
+                        print(f'Rejected packet from ip {packet.src_addr}, on ports {packet.src_port}:{packet.dst_port}, protocol {FWutils.protocols[packet.protocol[0]]} using rule {self.single_rule[0]}     {str(packet.direction)}')
                         # print(self.single_rule)
                         print()
                         pass
@@ -137,9 +152,16 @@ class FirewallCore:
         self.__w.close()
         print("Остановка прослушивания...")
 
+    # Поведение с пакетами ipv6
+    def sendIPv6(self, is_send):
+        self.__is_ipv6 = is_send
 
+    def isIPv6Sent(self):
+        return self.__is_ipv6
 
 
 
 fwc = FirewallCore()
+fwc.sendIPv6(True)
+
 fwc.start()
