@@ -14,7 +14,7 @@ class FirewallCore:
         else:
             raise ValueError(f'Invalid ip packet parameter: {param}')
 
-        if rule_value == 'None':
+        if rule_value == '':
             pass
         elif rule_value == check_value:
             pass
@@ -37,7 +37,7 @@ class FirewallCore:
         if check_value == 'None':
             check_value = -1
 
-        if rule_values[0] == 'None':
+        if rule_values[0] == '':
             pass
         elif (int(rule_values[0]) <= int(check_value)) and (int(check_value) <= int(rule_values[1])):
             pass
@@ -55,7 +55,7 @@ class FirewallCore:
             raise ValueError(f'Invalid ip packet parameter: {param}')
 
         rule_values = rule_values.split('-')
-        if rule_values[0] == 'None':
+        if rule_values[0] == '':
             pass
         elif (FWutils.compareIpAddr(rule_values[0], check_value) in (0, 1)) and (FWutils.compareIpAddr(check_value, rule_values[1]) in (0, 1)):
             pass

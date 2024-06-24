@@ -1,4 +1,6 @@
 №; direction; protocol; src_ips; dst_ips; src_ports; dst_ports; result;
-0;1;ICMP;None;None;None;None;reject
-1;None;ICMP;None;None;None;None;reject
-2;None;None;None;None;None;None;allow
+0;0;UDP;;;;53-53;allow
+1;1;UDP;;;53-53;;allow
+2;;UDP;;;;;reject
+3;;;87.236.19.243-87.236.19.243;;;;reject
+4;;;;;;;allow
