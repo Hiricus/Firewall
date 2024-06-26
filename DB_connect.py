@@ -138,6 +138,19 @@ class MySQL:
         else:
             return (True, found_rule[0][1])
 
+    # Возвращает все правила без их id
+    def get_all_rules(self):
+        get_all_query = "SELECT * FROM `rules` ORDER BY rule_order ASC"
+        cursor = self.connection.cursor()
+        cursor.execute(get_all_query)
+        all_rules = cursor.fetchall()
+        cursor.close()
+
+        for i in range(len(all_rules)):
+            all_rules[i] = list(all_rules[i])
+            all_rules[i].pop(0)
+
+        return all_rules
 
 
 
@@ -150,6 +163,8 @@ dbcon = MySQL(
     database_name="firewalldb"
 )
 
-s = dbcon.is_exists('', '', '', '', '', '', 'allow')
+# s = dbcon.is_exists('0', 'ICMP', '', '', '', '53-53', 'allow')
 
-print(s)
+rules = dbcon.get_all_rules()
+for rule in rules:
+    print(rule)
