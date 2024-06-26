@@ -1,5 +1,6 @@
 import pydivert
 import FWutils
+import DB_connect
 
 class FirewallCore:
     __instance = None
@@ -76,11 +77,20 @@ class FirewallCore:
         self.__w = pydivert.WinDivert()
         self.__is_ipv6 = True
 
+        self.dbcon = DB_connect.MySQL(
+            host="127.0.0.1",
+            port="3306",
+            user="root",
+            passwd="2556145",
+            database_name="firewalldb"
+        )
+
+        self.also_rules = self.dbcon.get_all_rules()
+
 
     def start(self):
         # открываем хэндлер pydivert
         self.__w.open()
-        print("Начало прослушивания...")
 
         # Чтение правил
         with open("ruleset.txt", "r") as rulefile:
@@ -93,7 +103,15 @@ class FirewallCore:
             self.rules[i] = self.rules[i].split(';')
         # print(self.rules)
 
+        for i in range(len(self.rules)):
+            print(self.rules[i])
+            print(self.also_rules[i])
+            print()
+
+        self.rules = self.also_rules
+
         # цикл работающий с пакетом
+        print("Начало прослушивания...")
         for packet in self.__w:
             # print(FWutils.protocols[packet.protocol[0]])
             # print()
@@ -101,7 +119,11 @@ class FirewallCore:
             # Не работает с ipv6
             if packet.ipv6:
                 if self.__is_ipv6:
-                    self.__w.send(packet)
+                    try:
+                        self.__w.send(packet)
+                        # print("ipv6 is ALIVE")
+                    except OSError:
+                        print("\n"*50 + "ipv6 is DEAD" + "\n"*50 + str(packet) + "\n"*50)  # Бывают в жизни огорчения
                 else:
                     pass
                 continue
@@ -126,10 +148,14 @@ class FirewallCore:
                 # действие, если пакет подошёл под правило
                 if self.__is_fit_F:
                     if self.single_rule[7] == 'allow':
-                        self.__w.send(packet)
+                        try:
+                            print(f'Allowed packet from ip {packet.src_addr}, on ports {packet.src_port}:{packet.dst_port}, protocol {FWutils.protocols[packet.protocol[0]]} using rule {self.single_rule[0]}     {str(packet.direction)}')
+                            print()
+                            self.__w.send(packet)
+                        except OSError:
+                            print("\n"*50 + "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" + "\n"*50)
                     elif self.single_rule[7] == 'reject':
                         print(f'Rejected packet from ip {packet.src_addr}, on ports {packet.src_port}:{packet.dst_port}, protocol {FWutils.protocols[packet.protocol[0]]} using rule {self.single_rule[0]}     {str(packet.direction)}')
-                        # print(self.single_rule)
                         print()
                         pass
                     else:
@@ -148,7 +174,6 @@ class FirewallCore:
 
     def isIPv6Sent(self):
         return self.__is_ipv6
-
 
 
 fwc = FirewallCore()

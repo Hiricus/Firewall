@@ -1,8 +1,8 @@
-import mysql.connector as con
+import mysql.connector
 
 class MySQL:
     def __init__(self, host, port, user, passwd, database_name):
-        self.connection = con.connect(
+        self.connection = mysql.connector.connect(
             host=host,
             port=port,
             user=user,
@@ -11,7 +11,8 @@ class MySQL:
         )
 
     def __del__(self):
-        self.connection.close()
+        if self.connection is not None:
+            self.connection.close()
 
     # Информация о таблице, добавил чисто на всякий
     def table_info(self, table_name):
@@ -155,16 +156,14 @@ class MySQL:
 
 
 
-dbcon = MySQL(
-    host="127.0.0.1",
-    port="3306",
-    user="root",
-    passwd="2556145",
-    database_name="firewalldb"
-)
-
-# s = dbcon.is_exists('0', 'ICMP', '', '', '', '53-53', 'allow')
-
-rules = dbcon.get_all_rules()
-for rule in rules:
-    print(rule)
+# dbcon = MySQL(
+#     host="127.0.0.1",
+#     port="3306",
+#     user="root",
+#     passwd="2556145",
+#     database_name="firewalldb"
+# )
+#
+# rules = dbcon.get_all_rules()
+# for rule in rules:
+#     print(rule)
