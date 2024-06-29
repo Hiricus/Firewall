@@ -23,3 +23,10 @@ def compareIpAddr(ip1, ip2):
 
     # Если все октеты равны
     return 0
+
+def simplify_range(data):
+    if data == '':
+        pass
+    elif len(data.split('-')) == 1:
+        data = data + '-' + data
+    return data

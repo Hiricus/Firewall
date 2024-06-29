@@ -10,6 +10,10 @@ class MySQL:
             database=database_name
         )
 
+    def close_connection(self):
+        if self.connection.is_connected():
+            self.connection.close()
+
     def __del__(self):
         if self.connection is not None:
             self.connection.close()
@@ -86,6 +90,7 @@ class MySQL:
         self.add_rule(order, direction, protocol, src_ips, dst_ips, src_ports, dst_ports, result, annotation)
 
     # Удаляет правило по порядковому номеру
+    # Системное, не трогать!!! Если надо удалять есть rule_pop
     def del_rule_by_order(self, order):
         delete_query = f"DELETE FROM `rules` WHERE rule_order = {order}"
         cursor = self.connection.cursor()
@@ -138,6 +143,18 @@ class MySQL:
             return (False, -1)
         else:
             return (True, found_rule[0][1])
+
+    def is_exists_on_order(self, order):
+        cursor = self.connection.cursor()
+        exists_query = (f"SELECT * FROM `rules` WHERE rule_order = {order}")
+        cursor.execute(exists_query)
+        found_rule = cursor.fetchall()
+        cursor.close()
+
+        if found_rule == []:
+            return False
+        else:
+            return True
 
     # Возвращает все правила без их id
     def get_all_rules(self):

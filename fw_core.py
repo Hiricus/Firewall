@@ -63,7 +63,7 @@ class FirewallCore:
         else:
             self.__is_fit_F = False
 
-    # Типа синглтон
+    # Синглтон
     def __new__(cls, *args, **kwargs):
         if cls.__instance is None:
             cls.__instance = super().__new__(cls)
@@ -77,6 +77,7 @@ class FirewallCore:
         self.__w = pydivert.WinDivert()
         self.__is_ipv6 = True
 
+        # Получаем правила из БД и закрываем соединение
         self.dbcon = DB_connect.MySQL(
             host="127.0.0.1",
             port="3306",
@@ -84,16 +85,15 @@ class FirewallCore:
             passwd="2556145",
             database_name="firewalldb"
         )
-
         self.also_rules = self.dbcon.get_all_rules()
-
+        self.dbcon.close_connection()
 
     def start(self):
         # открываем хэндлер pydivert
         self.__w.open()
 
         # Чтение правил
-        with open("ruleset.txt", "r") as rulefile:
+        with open("E:/Python_projects/Firewall/ruleset.txt", "r") as rulefile:
             self.rules = rulefile.readlines()
         self.rules = self.rules[1:]  # Убирает референсную строчку
 
@@ -108,15 +108,14 @@ class FirewallCore:
             print(self.also_rules[i])
             print()
 
+
         self.rules = self.also_rules
 
         # цикл работающий с пакетом
         print("Начало прослушивания...")
         for packet in self.__w:
-            # print(FWutils.protocols[packet.protocol[0]])
-            # print()
 
-            # Не работает с ipv6
+            # Не работает с ipv6 (пока что)
             if packet.ipv6:
                 if self.__is_ipv6:
                     try:
@@ -149,8 +148,8 @@ class FirewallCore:
                 if self.__is_fit_F:
                     if self.single_rule[7] == 'allow':
                         try:
-                            print(f'Allowed packet from ip {packet.src_addr}, on ports {packet.src_port}:{packet.dst_port}, protocol {FWutils.protocols[packet.protocol[0]]} using rule {self.single_rule[0]}     {str(packet.direction)}')
-                            print()
+                            # print(f'Allowed packet from ip {packet.src_addr}, on ports {packet.src_port}:{packet.dst_port}, protocol {FWutils.protocols[packet.protocol[0]]} using rule {self.single_rule[0]}     {str(packet.direction)}')
+                            # print()
                             self.__w.send(packet)
                         except OSError:
                             print("\n"*50 + "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" + "\n"*50)
@@ -176,7 +175,7 @@ class FirewallCore:
         return self.__is_ipv6
 
 
-fwc = FirewallCore()
-fwc.sendIPv6(True)
-
-fwc.start()
+# fwc = FirewallCore()
+# fwc.sendIPv6(True)
+#
+# fwc.start()
